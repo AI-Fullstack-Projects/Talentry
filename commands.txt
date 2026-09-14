@@ -8,3 +8,7 @@ uvicorn main:app --reload
 
 frontend react:
 npm run dev
+
+Database:
+psql -U postgres -d candidate_intelligence 
+\dt - Gets tables from db
