@@ -16,11 +16,11 @@ function App() {
   // Store all uploaded candidates fetched from the backend.
   const [candidates, setCandidates] = useState([]);
 
-  // Stores the candidate whose resume details are currently being viewed.
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-
-  // Tracks whether the detail request is in progress.
-  const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
+  // Stores the role and compatibility result currently selected for review.
+  const [selectedJobId, setSelectedJobId] = useState("");
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+  const [matchResult, setMatchResult] = useState(null);
+  const [isLoadingMatch, setIsLoadingMatch] = useState(false);
 
   // `fetch` returns a promise, so this function waits for the HTTP response
   // and then converts the JSON response into data React can render.
@@ -57,30 +57,38 @@ function App() {
     }
   };
 
-  // Fetch one candidate and display the complete candidate record.
-  const fetchCandidate = async (candidateId) => {
-    // This request updates the detail section in place; it does not navigate or reload the page.
-    setIsLoadingCandidate(true);
+  // Compare one candidate with the selected role.
+  const fetchCandidateMatch = async (candidateId) => {
+    if (!selectedJobId) {
+      return;
+    }
+
+    setSelectedCandidateId(candidateId);
+    setIsLoadingMatch(true);
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/candidates/${candidateId}`
+        `http://127.0.0.1:8000/jobs/${selectedJobId}/candidates/${candidateId}/match`
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch candidate");
+        throw new Error("Failed to match candidate");
       }
 
       const data = await response.json();
-
-      // Store the selected candidate so React can render its details.
-      setSelectedCandidate(data);
+      setMatchResult(data);
     } catch (error) {
-      console.error("Error fetching candidate:", error);
+      console.error("Error matching candidate:", error);
+      setMatchResult(null);
     } finally {
-      // This runs whether the request succeeds or fails.
-      setIsLoadingCandidate(false);
+      setIsLoadingMatch(false);
     }
+  };
+
+  const handleJobSelection = (e) => {
+    setSelectedJobId(e.target.value);
+    setSelectedCandidateId(null);
+    setMatchResult(null);
   };
   // An empty dependency array means this runs once after the first render.
   useEffect(() => {
@@ -178,89 +186,120 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Candidate Intelligence</h1>
+    <div className="app-shell">
+      <header className="app-header">
+        <div>
+          <p className="eyebrow">Talent operations workspace</p>
+          <h1>Candidate Intelligence</h1>
+          <p className="header-copy">
+            Build focused roles, organize applicants, and review resume insights in one place.
+          </p>
+        </div>
+        <div className="header-mark" aria-hidden="true">CI</div>
+      </header>
 
-      <h2>Create Job</h2>
+      <section className="workspace-section intro-section">
+        <div className="section-heading">
+          <p className="section-kicker">01 / Role setup</p>
+          <h2>Create Job</h2>
+        </div>
 
       {/* React calls handleSubmit when the user submits this form. */}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Job Title</label>
+      <form className="form-panel" onSubmit={handleSubmit}>
+        <div className="field-group">
+          <label htmlFor="job-title">Job Title</label>
           <input
+            id="job-title"
             type="text"
             value={jobTitle}
             /* Update React state on every keystroke. */
             onChange={(e) => setJobTitle(e.target.value)}
             required
+            placeholder="e.g. Senior Product Designer"
           />
         </div>
 
-        <div>
-          <label>Job Description</label>
+        <div className="field-group">
+          <label htmlFor="job-description">Job Description</label>
           <textarea
+            id="job-description"
             value={jobDescription}
             /* The textarea follows the same controlled-input pattern. */
             onChange={(e) => setJobDescription(e.target.value)}
             rows="8"
             required
+            placeholder="Describe the role, responsibilities, and what success looks like."
           />
         </div>
 
-        <button type="submit">Create Job</button>
+        <button className="primary-button" type="submit">Create Job <span aria-hidden="true">+</span></button>
       </form>
+      </section>
 
-      <hr />
-
-      <h2>Existing Jobs</h2>
+      <section className="workspace-section">
+        <div className="section-heading section-heading-inline">
+          <div>
+            <p className="section-kicker">02 / Open roles</p>
+            <h2>Existing Jobs</h2>
+          </div>
+          <span className="section-count">{jobs.length} {jobs.length === 1 ? "role" : "roles"}</span>
+        </div>
 
       {jobs.length === 0 ? (
-        <p>No jobs found.</p>
+        <p className="empty-state">No jobs found. Create your first role above.</p>
       ) : (
-        <div>
+        <div className="record-grid">
           {/* map() creates one job card for every object in the jobs array. */}
           {jobs.map((job) => (
-            <div key={job.id}>
+            <article className="record-card job-card" key={job.id}>
               <h3>{job.title}</h3>
               <p>{job.description}</p>
               <small>
                 Created: {new Date(job.created_at).toLocaleString()}
               </small>
-            </div>
+            </article>
           ))}
         </div>
       )}
+      </section>
 
-      <hr />
-
-      <h2>Upload Candidate</h2>
+      <section className="workspace-section candidate-section">
+        <div className="section-heading">
+          <p className="section-kicker">03 / Candidate intake</p>
+          <h2>Upload Candidate</h2>
+        </div>
 
       {/* React calls handleCandidateSubmit when this form is submitted. */}
-      <form onSubmit={handleCandidateSubmit}>
-        <div>
-          <label>Candidate Name</label>
+      <form className="form-panel candidate-form" onSubmit={handleCandidateSubmit}>
+        <div className="field-group">
+          <label htmlFor="candidate-name">Candidate Name</label>
           <input
+            id="candidate-name"
             type="text"
             value={candidateName}
             /* Store the candidate name in React state on every keystroke. */
             onChange={(e) => setCandidateName(e.target.value)}
             required
+            placeholder="Full name"
           />
         </div>
 
-        <div>
-          <label>Candidate Email</label>
+        <div className="field-group">
+          <label htmlFor="candidate-email">Candidate Email</label>
           <input
+            id="candidate-email"
             type="email"
             value={candidateEmail}
             /* Store the candidate email in React state. */
             onChange={(e) => setCandidateEmail(e.target.value)}
+            placeholder="name@example.com"
           />
         </div>
 
-        <div>
-          <label>Resume</label>
+        <div className="field-group file-field">
+          <label htmlFor="resume">Resume</label>
           <input
+            id="resume"
             type="file"
             accept=".pdf,.doc,.docx"
             /*
@@ -272,19 +311,26 @@ function App() {
           />
         </div>
 
-        <button type="submit">Upload Candidate</button>
+        <button className="primary-button" type="submit">Upload Candidate <span aria-hidden="true">↑</span></button>
       </form>
-      <hr />
+      </section>
 
-      <h2>Uploaded Candidates</h2>
+      <section className="workspace-section">
+        <div className="section-heading section-heading-inline">
+          <div>
+            <p className="section-kicker">04 / Talent pool</p>
+            <h2>Uploaded Candidates</h2>
+          </div>
+          <span className="section-count">{candidates.length} {candidates.length === 1 ? "candidate" : "candidates"}</span>
+        </div>
 
       {candidates.length === 0 ? (
-        <p>No candidates found.</p>
+        <p className="empty-state">No candidates found. Upload a resume to begin reviewing talent.</p>
       ) : (
-        <div>
+        <div className="record-grid candidate-grid">
           {/* map() creates one card per candidate received from the backend. */}
           {candidates.map((candidate) => (
-            <div key={candidate.id}>
+            <article className="record-card candidate-card" key={candidate.id}>
               <h3>{candidate.name}</h3>
 
               <p>
@@ -300,59 +346,102 @@ function App() {
                 {new Date(candidate.created_at).toLocaleString()}
               </small>
 
-              <div>
+              <div className="card-action">
                 <button
+                  className="secondary-button"
                   type="button"
-                  // Fetch the full record only when the user asks to view it.
-                  onClick={() => fetchCandidate(candidate.id)}
+                  disabled={!selectedJobId || isLoadingMatch}
+                  onClick={() => fetchCandidateMatch(candidate.id)}
                 >
-                  View Resume
+                  {isLoadingMatch && selectedCandidateId === candidate.id
+                    ? "Matching..."
+                    : "Check compatibility"}
                 </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       )}
-      <hr />
+      </section>
 
-    {/* The detail panel is rendered from state and can be closed without another API request. */}
-<h2>Candidate Details</h2>
+      <section className="workspace-section details-section">
+        <div className="section-heading section-heading-inline">
+          <div>
+            <p className="section-kicker">05 / Compatibility</p>
+            <h2>Candidate compatibility</h2>
+          </div>
+          <span className="section-count">{candidates.length} available</span>
+        </div>
 
-{isLoadingCandidate ? (
-  <p>Loading candidate...</p>
-) : selectedCandidate === null ? (
-  <p>Select a candidate to view their resume.</p>
-) : (
-  <div className="candidate-details">
-    <h3>{selectedCandidate.name}</h3>
+        {candidates.length === 0 ? (
+          <p className="empty-state">Upload a candidate to calculate compatibility.</p>
+        ) : jobs.length === 0 ? (
+          <p className="empty-state">Create a job before checking candidate compatibility.</p>
+        ) : (
+          <div className="compatibility-layout">
+            <div className="compatibility-list">
+              <label className="compatibility-label" htmlFor="match-job">
+                Match candidates against
+              </label>
+              <select
+                id="match-job"
+                className="job-selector"
+                value={selectedJobId}
+                onChange={handleJobSelection}
+              >
+                <option value="">Select a job</option>
+                {jobs.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.title}
+                  </option>
+                ))}
+              </select>
 
-    <p>
-      Email: {selectedCandidate.email || "Not provided"}
-    </p>
+              <div className="compatibility-candidates">
+                {candidates.map((candidate) => (
+                  <button
+                    className={`candidate-select ${selectedCandidateId === candidate.id ? "is-selected" : ""}`}
+                    key={candidate.id}
+                    type="button"
+                    disabled={!selectedJobId || isLoadingMatch}
+                    onClick={() => fetchCandidateMatch(candidate.id)}
+                  >
+                    <span>{candidate.name}</span>
+                    <small>{candidate.resume_filename}</small>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-    <p>
-      Resume: {selectedCandidate.resume_filename}
-    </p>
-
-    <small>
-      Uploaded:{" "}
-      {new Date(selectedCandidate.created_at).toLocaleString()}
-    </small>
-
-    <h4>Extracted Resume Text</h4>
-
-    <pre className="resume-text">
-      {selectedCandidate.resume_text || "No text was extracted."}
-    </pre>
-
-    <button
-      type="button"
-      onClick={() => setSelectedCandidate(null)}
-    >
-      Close Resume
-    </button>
-  </div>
-)}
+            <div className="match-result" aria-live="polite">
+              {!selectedJobId ? (
+                <p className="match-placeholder">Choose a role, then select a candidate to see the match.</p>
+              ) : isLoadingMatch ? (
+                <p className="match-placeholder">Calculating compatibility...</p>
+              ) : matchResult ? (
+                <>
+                  <p className="match-overline">Compatibility score</p>
+                  <div className="match-score">{matchResult.match_score}%</div>
+                  <h3>{matchResult.candidate_name}</h3>
+                  <p className="match-role">Matched against {matchResult.job_title}</p>
+                  <div className="skill-groups">
+                    <div>
+                      <span className="skill-heading">Matched skills</span>
+                      <p>{matchResult.matched_skills.length ? matchResult.matched_skills.join(", ") : "No matching skills found"}</p>
+                    </div>
+                    <div>
+                      <span className="skill-heading">Skills to explore</span>
+                      <p>{matchResult.missing_skills.length ? matchResult.missing_skills.join(", ") : "No gaps detected"}</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="match-placeholder">Select a candidate to calculate their compatibility.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

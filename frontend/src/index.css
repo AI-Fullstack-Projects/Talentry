@@ -109,3 +109,40 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+:root {
+  --text: #496067;
+  --muted: #6f8085;
+  --text-h: #12333a;
+  --bg: #f5f8f6;
+  --border: #d9e4e1;
+  --border-strong: #b9cfca;
+  --accent: #148f89;
+  --accent-deep: #0b5c69;
+  --sans: "Trebuchet MS", "Segoe UI", sans-serif;
+  --heading: "Trebuchet MS", "Segoe UI", sans-serif;
+  color-scheme: light;
+  color: var(--text);
+  background: var(--bg);
+}
+
+body {
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(255, 214, 157, 0.22), transparent 30%),
+    linear-gradient(135deg, #f7faf7 0%, #edf6f2 48%, #fff8ed 100%);
+}
+
+#root {
+  width: 100%;
+  max-width: none;
+  border: 0;
+  text-align: left;
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 650;
+  color: var(--text-h);
+}
