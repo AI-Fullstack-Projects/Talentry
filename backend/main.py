@@ -15,6 +15,8 @@ from schemas import JobCreate
 from pypdf import PdfReader
 from docx import Document
 
+from services.resume_analyzer import analyze_resume
+
 # Extract a plain-text version of the uploaded resume so it can be displayed
 # in the UI and checked against a job description for skill matching.
 def extract_resume_text(file_path: Path) -> str:
@@ -345,4 +347,46 @@ def match_candidate_to_job(
         "candidate_skills": sorted(candidate_skills),
         "matched_skills": sorted(matched_skills),
         "missing_skills": sorted(missing_skills),
+    }
+
+@app.post("/candidates/{candidate_id}/analyze")
+def analyze_candidate(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+):
+    candidate = (
+        db.query(Candidate)
+        .filter(Candidate.id == candidate_id)
+        .first()
+    )
+
+    if candidate is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Candidate not found",
+        )
+
+    if not candidate.resume_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Candidate does not have resume text",
+        )
+
+    try:
+        profile = analyze_resume(candidate.resume_text)
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI analysis failed: {error}",
+        )
+
+    candidate.ai_profile = profile.model_dump()
+
+    db.commit()
+    db.refresh(candidate)
+
+    return {
+        "message": "Candidate analyzed successfully",
+        "candidate_id": candidate.id,
+        "ai_profile": candidate.ai_profile,
     }

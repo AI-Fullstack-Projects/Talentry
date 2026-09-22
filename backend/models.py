@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, JSON
 from sqlalchemy.sql import func
 
 from database import Base
@@ -41,4 +41,5 @@ class Candidate(Base):
     resume_text = Column(Text, nullable=True)
     # PostgreSQL fills this automatically when a row is inserted.
     # `server_default=func.now()` means "use the database's current timestamp".
+    ai_profile = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

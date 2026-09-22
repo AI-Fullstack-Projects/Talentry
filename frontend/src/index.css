@@ -1,69 +1,41 @@
+/* Shared design tokens keep colors, typography, and spacing consistent across routes. */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --text: #5d6974;
+  --text-h: #17252f;
+  --muted: #71808a;
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --surface-soft: #edf3f1;
+  --border: #dce5e2;
+  --border-strong: #c5d4d0;
+  --code-bg: #e9f0ed;
+  --accent: #087f78;
+  --accent-deep: #075b63;
+  --accent-bg: rgba(8, 127, 120, 0.1);
+  --accent-border: rgba(8, 127, 120, 0.42);
+  --social-bg: #edf3f1;
+  --shadow: 0 18px 45px rgba(26, 52, 58, 0.08);
+  --sans: "Aptos", "Trebuchet MS", sans-serif;
+  --heading: "Aptos Display", "Trebuchet MS", sans-serif;
+  --mono: "Cascadia Mono", Consolas, monospace;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  font: 16px/145% var(--sans);
+  letter-spacing: 0;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
 }
 
 body {
   margin: 0;
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  min-width: 320px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), transparent 44%),
+    #f4f6f5;
 }
 
 h1,
@@ -75,7 +47,7 @@ h2 {
 
 h1 {
   font-size: 56px;
-  letter-spacing: -1.68px;
+  letter-spacing: -1.2px;
   margin: 32px 0;
   @media (max-width: 1024px) {
     font-size: 36px;
@@ -110,39 +82,13 @@ code {
   background: var(--code-bg);
 }
 
-:root {
-  --text: #496067;
-  --muted: #6f8085;
-  --text-h: #12333a;
-  --bg: #f5f8f6;
-  --border: #d9e4e1;
-  --border-strong: #b9cfca;
-  --accent: #148f89;
-  --accent-deep: #0b5c69;
-  --sans: "Trebuchet MS", "Segoe UI", sans-serif;
-  --heading: "Trebuchet MS", "Segoe UI", sans-serif;
-  color-scheme: light;
-  color: var(--text);
-  background: var(--bg);
-}
-
-body {
-  min-width: 320px;
-  background:
-    radial-gradient(circle at 8% 12%, rgba(255, 214, 157, 0.22), transparent 30%),
-    linear-gradient(135deg, #f7faf7 0%, #edf6f2 48%, #fff8ed 100%);
-}
-
+/* The app owns the full viewport; individual pages control their inner width. */
 #root {
   width: 100%;
   max-width: none;
   border: 0;
   text-align: left;
+  min-height: 100svh;
+  box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 650;
-  color: var(--text-h);
-}
