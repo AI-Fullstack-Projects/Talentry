@@ -27,3 +27,15 @@ class CandidateAIProfile(BaseModel):
     years_of_experience: float | None = None
     education: list[Education]
     experience: list[Experience]
+
+class EvaluationEvidence(BaseModel):
+    requirement: str
+    evidence: str
+
+
+class CandidateEvaluation(BaseModel):
+    overall_match: int
+    strengths: list[str]
+    gaps: list[str]
+    evidence: list[EvaluationEvidence]
+    summary: str

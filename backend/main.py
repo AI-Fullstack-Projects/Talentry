@@ -9,13 +9,14 @@ import shutil
 from pathlib import Path
 from database import Base, engine, get_db
 from models import Candidate, Job as JobModel
-from schemas import JobCreate
+from schemas import JobCreate, CandidateAIProfile
 
 
 from pypdf import PdfReader
 from docx import Document
 
 from services.resume_analyzer import analyze_resume
+from services.candidate_evaluator import evaluate_candidate
 
 # Extract a plain-text version of the uploaded resume so it can be displayed
 # in the UI and checked against a job description for skill matching.
@@ -389,4 +390,61 @@ def analyze_candidate(
         "message": "Candidate analyzed successfully",
         "candidate_id": candidate.id,
         "ai_profile": candidate.ai_profile,
+    }
+@app.post("/jobs/{job_id}/candidates/{candidate_id}/evaluate")
+def evaluate_candidate_for_job(
+    job_id: int,
+    candidate_id: int,
+    db: Session = Depends(get_db),
+):
+    job = (
+        db.query(JobModel)
+        .filter(JobModel.id == job_id)
+        .first()
+    )
+
+    if job is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found",
+        )
+
+    candidate = (
+        db.query(Candidate)
+        .filter(Candidate.id == candidate_id)
+        .first()
+    )
+
+    if candidate is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Candidate not found",
+        )
+
+    if not candidate.ai_profile:
+        raise HTTPException(
+            status_code=400,
+            detail="Candidate must be analyzed before evaluation",
+        )
+
+    try:
+        profile = CandidateAIProfile.model_validate(
+            candidate.ai_profile
+        )
+
+        evaluation = evaluate_candidate(
+            job_description=job.description,
+            candidate_profile=profile,
+        )
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"AI evaluation failed: {error}",
+        )
+
+    return {
+        "job_id": job.id,
+        "candidate_id": candidate.id,
+        "evaluation": evaluation.model_dump(),
     }

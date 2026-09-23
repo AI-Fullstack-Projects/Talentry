@@ -16,10 +16,10 @@ def analyze_resume(resume_text: str) -> CandidateAIProfile:
                     "Return only information supported by the resume."
                 ),
                 },
-            {
-                "role": "user",
-                "content": resume_text,
-            },
+                {
+                    "role": "user",
+                    "content": resume_text,
+                },
         ],
         format=CandidateAIProfile.model_json_schema(),
     )
